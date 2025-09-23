@@ -360,25 +360,27 @@
             if (!phone || typeof phone !== 'string') {
                 return '';
             }
-            // 1. Hapus semua karakter non-digit dari nomor telepon
+            // 1. Hapus semua karakter kecuali angka.
             let digitsOnly = phone.replace(/\D/g, '');
 
-            // 2. Cek jika nomor dimulai dengan '0', ganti dengan '62'
-            if (digitsOnly.startsWith('0')) {
-                return '62' + digitsOnly.substring(1);
-            }
-
-            // 3. Jika nomor sudah dimulai dengan '62', tidak perlu diubah
+            // 2. Jika nomor dimulai dengan '62', anggap sudah benar.
             if (digitsOnly.startsWith('62')) {
                 return digitsOnly;
             }
+
+            // 3. Jika nomor dimulai dengan '0', ganti '0' dengan '62'.
+            if (digitsOnly.startsWith('0')) {
+                return '62' + digitsOnly.substring(1);
+            }
             
-            // 4. Jika nomor tidak dimulai dengan 0 atau 62 (misal: 812...), tambahkan 62 di depan
-            if (digitsOnly.length > 5) { // Asumsi nomor valid
+            // 4. Jika nomor tidak dimulai dengan '0' atau '62' (misal, langsung '8xx'),
+            //    dan cukup panjang, tambahkan '62' di depan.
+            if (digitsOnly.length > 8) { 
                 return '62' + digitsOnly;
             }
 
-            // Jika formatnya tidak dikenali, kembalikan nomor yang sudah bersih
+            // 5. Jika tidak ada yang cocok, kemungkinan nomor tidak valid.
+            //    Kembalikan apa adanya untuk menghindari error.
             return digitsOnly;
         };
 
