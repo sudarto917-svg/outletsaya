@@ -360,11 +360,26 @@
             if (!phone || typeof phone !== 'string') {
                 return '';
             }
-            let formatted = phone.trim().replace(/[- ]/g, "");
-            if (formatted.startsWith('0')) {
-                return '62' + formatted.substring(1);
+            // 1. Hapus semua karakter non-digit dari nomor telepon
+            let digitsOnly = phone.replace(/\D/g, '');
+
+            // 2. Cek jika nomor dimulai dengan '0', ganti dengan '62'
+            if (digitsOnly.startsWith('0')) {
+                return '62' + digitsOnly.substring(1);
             }
-            return formatted;
+
+            // 3. Jika nomor sudah dimulai dengan '62', tidak perlu diubah
+            if (digitsOnly.startsWith('62')) {
+                return digitsOnly;
+            }
+            
+            // 4. Jika nomor tidak dimulai dengan 0 atau 62 (misal: 812...), tambahkan 62 di depan
+            if (digitsOnly.length > 5) { // Asumsi nomor valid
+                return '62' + digitsOnly;
+            }
+
+            // Jika formatnya tidak dikenali, kembalikan nomor yang sudah bersih
+            return digitsOnly;
         };
 
         const renderProducts = (category = 'all') => {
