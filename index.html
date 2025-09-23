@@ -185,9 +185,18 @@
                         <label for="delivery-address" class="block text-sm font-medium text-gray-400 mb-1">Alamat Pengiriman</label>
                         <textarea id="delivery-address" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Masukkan alamat lengkap..."></textarea>
                     </div>
+
+                    <!-- Payment Notice for Delivery -->
+                    <div id="delivery-payment-notice" class="mt-4 bg-yellow-900/50 border border-yellow-700 text-yellow-300 text-sm rounded-lg p-3 hidden">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+                            <p>Untuk pesanan dengan pengiriman, mohon selesaikan pembayaran terlebih dahulu agar pesanan Anda dapat segera kami proses.</p>
+                        </div>
+                    </div>
+
                     <h3 class="font-bold text-lg mt-6 mb-4">Pilih Metode Pembayaran</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <button data-payment="cash" class="payment-method-btn flex flex-col items-center justify-center p-4 bg-gray-700 rounded-lg border-2 border-transparent ring-2 ring-emerald-500">
+                        <button data-payment="cash" class="payment-method-btn flex flex-col items-center justify-center p-4 bg-gray-700 rounded-lg border-2 border-transparent ring-2 ring-emerald-500 transition-opacity">
                             <i data-lucide="wallet" class="w-8 h-8 mb-2"></i>
                             <span class="font-semibold">Cash / Tunai</span>
                         </button>
@@ -271,7 +280,7 @@
         // =================================================================================
         // KONFIGURASI PENTING (WAJIB DIISI)
         // =================================================================================
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBv6HtEFSWvRL7zhLDxMtEulEx4N8yxc_jIdnJdgKIhpDu3ey22HMdhbZGzPn-a5vhlw/exec'; // <-- ISI DENGAN URL WEB APP ANDA
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcTvsDIxhhK3NttDeYm5kUHZUG2_SrShmlWS4wnu7JPVcIWueMeiMsDwEkH2WTJuSjSg/exec'; // <-- ISI DENGAN URL WEB APP ANDA
         const YOUR_WHATSAPP_NUMBER = '6285225466047'; // <-- GANTI DENGAN NOMOR WA ANDA
         const ADMIN_PASSWORD = 'Masdar45'; // <-- GANTI DENGAN PASSWORD ADMIN ANDA
         // =================================================================================
@@ -315,6 +324,7 @@
         const orderTypeBtns = document.querySelectorAll('.order-type-btn');
         const deliveryAddressContainer = document.getElementById('delivery-address-container');
         const deliveryAddressInput = document.getElementById('delivery-address');
+        const deliveryPaymentNotice = document.getElementById('delivery-payment-notice');
         const transferInfo = document.getElementById('transfer-info');
         const confirmOrderBtn = document.getElementById('confirm-order-btn');
         const customerNameInput = document.getElementById('customer-name');
@@ -345,6 +355,17 @@
         enterAppBtn.addEventListener('click', initApp);
 
         const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+
+        const formatWhatsappNumber = (phone) => {
+            if (!phone || typeof phone !== 'string') {
+                return '';
+            }
+            let formatted = phone.trim().replace(/[- ]/g, "");
+            if (formatted.startsWith('0')) {
+                return '62' + formatted.substring(1);
+            }
+            return formatted;
+        };
 
         const renderProducts = (category = 'all') => {
             productGrid.innerHTML = ''; 
@@ -432,6 +453,11 @@
             if (view === 'admin') fetchPendingOrders();
         };
 
+        const updateDeliveryNoticeVisibility = () => {
+            const showNotice = state.orderType === 'delivery' && state.paymentMethod === 'transfer';
+            deliveryPaymentNotice.classList.toggle('hidden', !showNotice);
+        };
+
         const handleCategoryClick = (e) => {
             const target = e.target.closest('.category-btn');
             if (!target) return;
@@ -488,15 +514,37 @@
             orderTypeBtns.forEach(btn => btn.classList.remove('ring-2', 'ring-emerald-500'));
             target.classList.add('ring-2', 'ring-emerald-500');
             deliveryAddressContainer.classList.toggle('hidden', state.orderType !== 'delivery');
+
+            const cashBtn = document.querySelector('.payment-method-btn[data-payment="cash"]');
+            const transferBtn = document.querySelector('.payment-method-btn[data-payment="transfer"]');
+
+            if (state.orderType === 'delivery') {
+                cashBtn.disabled = true;
+                cashBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                if (state.paymentMethod === 'cash') {
+                    state.paymentMethod = 'transfer';
+                    cashBtn.classList.remove('ring-2', 'ring-emerald-500');
+                    transferBtn.classList.add('ring-2', 'ring-emerald-500');
+                    transferInfo.classList.remove('hidden');
+                }
+            } else {
+                cashBtn.disabled = false;
+                cashBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            updateDeliveryNoticeVisibility();
         };
 
         const handlePaymentMethodClick = (e) => {
             const target = e.target.closest('.payment-method-btn');
-            if (!target) return;
+            if (!target || target.disabled) return;
+            
             state.paymentMethod = target.dataset.payment;
             paymentMethodBtns.forEach(btn => btn.classList.remove('ring-2', 'ring-emerald-500'));
             target.classList.add('ring-2', 'ring-emerald-500');
             transferInfo.classList.toggle('hidden', state.paymentMethod !== 'transfer');
+            updateDeliveryNoticeVisibility();
         };
 
         const handleSendOrder = async () => {
@@ -633,12 +681,18 @@
             pendingOrdersContainer.innerHTML = orders.map(order => {
                 const items = JSON.parse(order.items);
                 const itemsHtml = items.map(item => `<li>- ${item.name} (x${item.qty})</li>`).join('');
+                const formattedPhone = formatWhatsappNumber(order.customerPhone);
                 return `
                     <div id="order-${order.orderId}" class="bg-gray-800 p-4 rounded-lg">
                         <div class="flex justify-between items-start">
                              <div>
                                 <p class="font-bold text-lg">${order.customerName}</p>
-                                <p class="text-sm text-gray-400">${order.customerPhone}</p>
+                                <div class="flex items-center gap-2 text-sm text-gray-400">
+                                    <span>${order.customerPhone}</span>
+                                    <a href="https://wa.me/${formattedPhone}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 p-1 -m-1 rounded-full hover:bg-gray-700 transition-colors" title="Hubungi via WhatsApp">
+                                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                                    </a>
+                                </div>
                                 <p class="text-sm text-cyan-400 capitalize mt-1">Jenis: ${order.orderType}</p>
                              </div>
                              <div class="text-right">
@@ -658,6 +712,7 @@
                     </div>
                 `;
             }).join('');
+            lucide.createIcons();
         };
         
         const handleAdminAction = async (e) => {
