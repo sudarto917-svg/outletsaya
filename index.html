@@ -78,9 +78,14 @@
     <div id="app" class="max-w-4xl mx-auto min-h-screen hidden">
         <!-- ===== HEADER ===== -->
         <header class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-30 p-4 border-b border-gray-700 flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                Outlet Bahagia
-            </h1>
+            <div class="flex items-center gap-4">
+                 <button id="admin-login-btn" class="p-2 rounded-full hover:bg-gray-700 transition-colors">
+                    <i data-lucide="shield" class="w-6 h-6 text-gray-400"></i>
+                 </button>
+                 <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    Outlet Bahagia
+                </h1>
+            </div>
             <button id="cart-button" class="relative rounded-full p-2 hover:bg-gray-700 transition-colors">
                 <i data-lucide="shopping-cart" class="w-6 h-6"></i>
                 <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
@@ -151,8 +156,6 @@
                         <span>Total Tagihan:</span>
                         <span id="payment-total-amount" class="text-emerald-400">Rp 0</span>
                     </div>
-                    
-                    <!-- Customer Details -->
                     <div class="space-y-4">
                         <div>
                             <label for="customer-name" class="block text-sm font-medium text-gray-400 mb-1">Nama Pelanggan</label>
@@ -163,8 +166,6 @@
                             <input type="tel" id="customer-phone" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 081234567890">
                         </div>
                     </div>
-                    
-                    <!-- Order Type -->
                     <h3 class="font-bold text-lg mt-6 mb-4">Jenis Pesanan</h3>
                     <div class="grid grid-cols-3 gap-4">
                         <button data-type="dine-in" class="order-type-btn flex flex-col items-center justify-center p-3 bg-gray-700 rounded-lg border-2 border-transparent ring-2 ring-emerald-500">
@@ -180,14 +181,10 @@
                             <span class="font-semibold text-sm">Pengiriman</span>
                         </button>
                     </div>
-
-                    <!-- Delivery Address -->
                     <div id="delivery-address-container" class="mt-4 hidden">
                         <label for="delivery-address" class="block text-sm font-medium text-gray-400 mb-1">Alamat Pengiriman</label>
                         <textarea id="delivery-address" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Masukkan alamat lengkap..."></textarea>
                     </div>
-                    
-                    <!-- Payment Method -->
                     <h3 class="font-bold text-lg mt-6 mb-4">Pilih Metode Pembayaran</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <button data-payment="cash" class="payment-method-btn flex flex-col items-center justify-center p-4 bg-gray-700 rounded-lg border-2 border-transparent ring-2 ring-emerald-500">
@@ -199,20 +196,60 @@
                             <span class="font-semibold">Bank Transfer</span>
                         </button>
                     </div>
-
                     <div id="transfer-info" class="mt-4 bg-gray-900 p-4 rounded-md hidden">
                         <p class="font-semibold text-center">Silakan transfer ke rekening berikut:</p>
                         <p class="text-center text-lg font-bold mt-2">BCA: 1234567890</p>
                         <p class="text-center">a.n. Outlet Kekinian</p>
                     </div>
-
                     <button id="confirm-order-btn" class="w-full mt-8 bg-emerald-500 text-white py-3 rounded-lg font-bold text-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 disabled:bg-gray-500 disabled:cursor-not-allowed">
-                        <span id="confirm-btn-text">Konfirmasi Pesanan</span>
+                        <span id="confirm-btn-text">Kirim Pesanan</span>
                         <div id="confirm-btn-loader" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin hidden"></div>
                     </button>
                 </div>
             </div>
+
+            <!-- ===== ADMIN VIEW ===== -->
+            <div id="admin-view" class="hidden">
+                <div class="flex items-center justify-between gap-4 mb-6">
+                     <h2 class="text-2xl font-bold">Admin: Pesanan Masuk</h2>
+                     <button id="logout-admin-btn" class="flex items-center gap-2 bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span>Keluar</span>
+                    </button>
+                </div>
+                <div class="flex justify-end mb-4">
+                    <button id="refresh-orders-btn" class="flex items-center gap-2 bg-cyan-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-cyan-700">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Muat Ulang</span>
+                    </button>
+                </div>
+                <div id="pending-orders-container" class="space-y-4">
+                    <p class="text-center text-gray-500 py-10">Memuat pesanan masuk...</p>
+                </div>
+            </div>
         </main>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden modal-enter">
+        <div class="bg-gray-800 rounded-lg p-8 text-left max-w-sm w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Login Admin</h2>
+                <button id="close-admin-login-modal-btn" class="p-1 rounded-full hover:bg-gray-700">
+                     <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                 <div>
+                    <label for="admin-password-input" class="block text-sm font-medium text-gray-400 mb-1">Password</label>
+                    <input type="password" id="admin-password-input" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Masukkan password...">
+                </div>
+                <p id="admin-error-message" class="text-red-400 text-sm hidden">Password salah. Coba lagi.</p>
+                <button id="submit-admin-login-btn" class="w-full bg-emerald-500 text-white py-2.5 rounded-lg font-bold hover:bg-emerald-600 transition-colors">
+                    Masuk
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Success Modal -->
@@ -221,8 +258,8 @@
             <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i data-lucide="check" class="w-12 h-12 text-white"></i>
             </div>
-            <h2 class="text-2xl font-bold mb-2">Pesanan Berhasil!</h2>
-            <p class="text-gray-400 mb-6">Terima kasih telah memesan. Notifikasi WhatsApp telah dikirimkan.</p>
+            <h2 class="text-2xl font-bold mb-2">Pesanan Diterima!</h2>
+            <p class="text-gray-400 mb-6">Pesanan Anda telah kami terima dan sedang menunggu konfirmasi dari penjual. Terima kasih!</p>
             <button id="close-modal-btn" class="bg-emerald-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-emerald-600 transition-colors">Selesai</button>
         </div>
     </div>
@@ -234,8 +271,9 @@
         // =================================================================================
         // KONFIGURASI PENTING (WAJIB DIISI)
         // =================================================================================
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOKJQd8a4GRS1neFxN1Cnx8Xyb3SsZqMDGfQf3EFATrRFOlAAc19GYC1laTz7rBLN0Uw/exec'; // <-- ISI DENGAN URL WEB APP ANDA
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBv6HtEFSWvRL7zhLDxMtEulEx4N8yxc_jIdnJdgKIhpDu3ey22HMdhbZGzPn-a5vhlw/exec'; // <-- ISI DENGAN URL WEB APP ANDA
         const YOUR_WHATSAPP_NUMBER = '6285225466047'; // <-- GANTI DENGAN NOMOR WA ANDA
+        const ADMIN_PASSWORD = 'Masdar45'; // <-- GANTI DENGAN PASSWORD ADMIN ANDA
         // =================================================================================
 
         const state = {
@@ -250,24 +288,29 @@
         const splashScreen = document.getElementById('splash-screen');
         const enterAppBtn = document.getElementById('enter-app-btn');
         const appContainer = document.getElementById('app');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
         
         const productGrid = document.getElementById('product-grid');
-        const loadingMessage = document.getElementById('loading-message');
         const categoryBtns = document.querySelectorAll('.category-btn');
         const cartButton = document.getElementById('cart-button');
         const cartCountBadge = document.getElementById('cart-count-badge');
+
         const menuView = document.getElementById('menu-view');
         const cartView = document.getElementById('cart-view');
         const paymentView = document.getElementById('payment-view');
+        const adminView = document.getElementById('admin-view');
+        
         const backToMenuBtn = document.getElementById('back-to-menu-btn');
         const backToCartBtn = document.getElementById('back-to-cart-btn');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        
         const cartItemsContainer = document.getElementById('cart-items-container');
         const emptyCartMessage = document.getElementById('empty-cart-message');
         const cartSummary = document.getElementById('cart-summary');
         const subtotalAmountEl = document.getElementById('subtotal-amount');
         const totalAmountEl = document.getElementById('total-amount');
+        
         const paymentTotalAmountEl = document.getElementById('payment-total-amount');
-        const checkoutBtn = document.getElementById('checkout-btn');
         const paymentMethodBtns = document.querySelectorAll('.payment-method-btn');
         const orderTypeBtns = document.querySelectorAll('.order-type-btn');
         const deliveryAddressContainer = document.getElementById('delivery-address-container');
@@ -276,23 +319,32 @@
         const confirmOrderBtn = document.getElementById('confirm-order-btn');
         const customerNameInput = document.getElementById('customer-name');
         const customerPhoneInput = document.getElementById('customer-phone');
+        
         const successModal = document.getElementById('success-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
+
+        const pendingOrdersContainer = document.getElementById('pending-orders-container');
+        const refreshOrdersBtn = document.getElementById('refresh-orders-btn');
+        const logoutAdminBtn = document.getElementById('logout-admin-btn');
         
-        // --- SPLASH SCREEN LOGIC ---
+        // Admin Login Modal Elements
+        const adminLoginModal = document.getElementById('admin-login-modal');
+        const closeAdminLoginModalBtn = document.getElementById('close-admin-login-modal-btn');
+        const adminPasswordInput = document.getElementById('admin-password-input');
+        const submitAdminLoginBtn = document.getElementById('submit-admin-login-btn');
+        const adminErrorMessage = document.getElementById('admin-error-message');
+
+        // --- App Initialization ---
         const initApp = () => {
             splashScreen.style.opacity = '0';
             setTimeout(() => {
                 splashScreen.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-            }, 500); // Match CSS transition duration
+            }, 500);
         };
         enterAppBtn.addEventListener('click', initApp);
-        // --- END SPLASH SCREEN LOGIC ---
 
-        const formatCurrency = (amount) => {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-        };
+        const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
         const renderProducts = (category = 'all') => {
             productGrid.innerHTML = ''; 
@@ -301,7 +353,6 @@
                 : state.products.filter(p => p.category && p.category.toLowerCase().trim() === category);
 
             if (filteredProducts.length === 0) {
-                // Memberikan pesan yang lebih spesifik jika tidak ada produk di kategori yang dipilih
                 const message = category === 'all' ? "Menu belum ditambahkan di Google Sheet." : "Menu tidak ditemukan untuk kategori ini.";
                 productGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">${message}</p>`;
                 return;
@@ -328,13 +379,8 @@
         
         const renderCart = () => {
             const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-
-            if (totalItems > 0) {
-                cartCountBadge.textContent = totalItems;
-                cartCountBadge.classList.remove('hidden');
-            } else {
-                cartCountBadge.classList.add('hidden');
-            }
+            cartCountBadge.textContent = totalItems;
+            cartCountBadge.classList.toggle('hidden', totalItems === 0);
 
             if (state.currentView !== 'cart') return;
 
@@ -380,11 +426,10 @@
 
         const switchView = (view) => {
             state.currentView = view;
-            menuView.classList.add('hidden');
-            cartView.classList.add('hidden');
-            paymentView.classList.add('hidden');
+            [menuView, cartView, paymentView, adminView].forEach(v => v.classList.add('hidden'));
             document.getElementById(`${view}-view`).classList.remove('hidden');
-            if (view === 'cart') { renderCart(); }
+            if (view === 'cart') renderCart();
+            if (view === 'admin') fetchPendingOrders();
         };
 
         const handleCategoryClick = (e) => {
@@ -405,11 +450,9 @@
             const productId = parseInt(target.dataset.id);
             const product = state.products.find(p => p.id === productId);
             const cartItem = state.cart.find(item => item.id === productId);
-            if (cartItem) {
-                cartItem.quantity++;
-            } else {
-                state.cart.push({ ...product, quantity: 1 });
-            }
+            if (cartItem) cartItem.quantity++;
+            else state.cart.push({ ...product, quantity: 1 });
+            
             target.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Ditambahkan!`;
             target.classList.add('bg-emerald-500', 'text-white');
             lucide.createIcons();
@@ -427,13 +470,10 @@
             const productId = parseInt(target.dataset.id);
             if (target.classList.contains('update-quantity-btn')) {
                 const cartItem = state.cart.find(item => item.id === productId);
-                if (target.classList.contains('inc-btn')) {
-                    cartItem.quantity++;
-                } else if (target.classList.contains('dec-btn')) {
+                if (target.classList.contains('inc-btn')) cartItem.quantity++;
+                else if (target.classList.contains('dec-btn')) {
                     cartItem.quantity--;
-                    if (cartItem.quantity === 0) {
-                        state.cart = state.cart.filter(item => item.id !== productId);
-                    }
+                    if (cartItem.quantity === 0) state.cart = state.cart.filter(item => item.id !== productId);
                 }
             } else if (target.classList.contains('remove-from-cart-btn')) {
                 state.cart = state.cart.filter(item => item.id !== productId);
@@ -459,16 +499,14 @@
             transferInfo.classList.toggle('hidden', state.paymentMethod !== 'transfer');
         };
 
-        const handleConfirmOrder = async () => {
+        const handleSendOrder = async () => {
             const customerName = customerNameInput.value.trim();
             const customerPhone = customerPhoneInput.value.trim();
             const deliveryAddress = deliveryAddressInput.value.trim();
 
             if (state.cart.length === 0) return alert('Keranjang belanja kosong!');
             if (!customerName || !customerPhone) return alert('Nama dan Nomor WhatsApp pelanggan wajib diisi!');
-            if (state.orderType === 'delivery' && !deliveryAddress) {
-                return alert('Alamat pengiriman wajib diisi untuk pesanan delivery!');
-            }
+            if (state.orderType === 'delivery' && !deliveryAddress) return alert('Alamat pengiriman wajib diisi untuk pesanan delivery!');
             if (GOOGLE_APPS_SCRIPT_URL === '') return alert('Konfigurasi Error: URL Google Apps Script belum diisi.');
             
             const confirmBtnText = document.getElementById('confirm-btn-text');
@@ -480,48 +518,19 @@
             const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const orderData = {
                 timestamp: new Date().toISOString(),
-                customerName, 
-                customerPhone,
-                paymentMethod: state.paymentMethod,
-                totalAmount: total,
+                customerName, customerPhone, paymentMethod: state.paymentMethod, totalAmount: total,
                 items: JSON.stringify(state.cart.map(item => ({ name: item.name, qty: item.quantity, price: item.price }))),
                 orderType: state.orderType,
                 deliveryAddress: state.orderType === 'delivery' ? deliveryAddress : '',
             };
 
             try {
-                // Since 'no-cors' mode is used, we can't actually read the response.
-                // We'll assume success if the fetch doesn't throw an error.
                 await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    cache: 'no-cache',
+                    method: 'POST', mode: 'no-cors', cache: 'no-cache',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(orderData),
-                    redirect: 'follow',
+                    body: JSON.stringify(orderData), redirect: 'follow',
                 });
                 
-                let orderTypeText = '';
-                if(state.orderType === 'dine-in') orderTypeText = 'Makan di Tempat';
-                if(state.orderType === 'take-out') orderTypeText = 'Bawa Pulang';
-                if(state.orderType === 'delivery') orderTypeText = 'Pengiriman';
-
-                let message = `Halo *${customerName}*,\n\nTerima kasih atas pesanan Anda di *Outlet Bahagia*.\n\nBerikut rincian pesanan Anda:\n\n`;
-                state.cart.forEach(item => {
-                    message += `- ${item.name} (x${item.quantity}) : ${formatCurrency(item.price * item.quantity)}\n`;
-                });
-                message += `\n*Total : ${formatCurrency(total)}*\n`;
-                message += `Jenis Pesanan: *${orderTypeText}*\n`;
-                if (state.orderType === 'delivery') {
-                    message += `Alamat Pengiriman: *${deliveryAddress}*\n`;
-                }
-                message += `Metode Pembayaran: *${state.paymentMethod.charAt(0).toUpperCase() + state.paymentMethod.slice(1)}*\n\n`;
-                if (state.paymentMethod === 'transfer') {
-                    message += `Mohon segera lakukan pembayaran ke rekening:\n*BCA: 1234567890 a.n. Outlet Kekinian*\n\n`;
-                }
-                message += `Terima kasih! 🙏`;
-
-                window.open(`https://wa.me/${YOUR_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
                 successModal.classList.remove('hidden');
                 successModal.classList.add('modal-enter');
                 resetApp();
@@ -542,20 +551,17 @@
             customerNameInput.value = '';
             customerPhoneInput.value = '';
             deliveryAddressInput.value = '';
-            
-            // Reset visual state
             paymentMethodBtns.forEach(btn => btn.classList.remove('ring-2', 'ring-emerald-500'));
             document.querySelector('.payment-method-btn[data-payment="cash"]').classList.add('ring-2', 'ring-emerald-500');
             orderTypeBtns.forEach(btn => btn.classList.remove('ring-2', 'ring-emerald-500'));
             document.querySelector('.order-type-btn[data-type="dine-in"]').classList.add('ring-2', 'ring-emerald-500');
             deliveryAddressContainer.classList.add('hidden');
             transferInfo.classList.add('hidden');
-
             renderCart();
             switchView('menu');
         };
 
-        const closeModal = () => {
+        const closeSuccessModal = () => {
             successModal.classList.add('modal-leave');
             setTimeout(() => {
                 successModal.classList.add('hidden');
@@ -579,6 +585,107 @@
             }
         };
 
+        // --- ADMIN LOGIC ---
+        const openAdminLoginModal = () => {
+            adminPasswordInput.value = '';
+            adminErrorMessage.classList.add('hidden');
+            adminLoginModal.classList.remove('hidden');
+            adminLoginModal.classList.add('modal-enter');
+        };
+
+        const closeAdminLoginModal = () => {
+            adminLoginModal.classList.add('modal-leave');
+            setTimeout(() => {
+                adminLoginModal.classList.add('hidden');
+                adminLoginModal.classList.remove('modal-enter', 'modal-leave');
+            }, 300);
+        };
+        
+        const handleSubmitAdminLogin = () => {
+            const pass = adminPasswordInput.value;
+            if (pass === ADMIN_PASSWORD) {
+                closeAdminLoginModal();
+                switchView('admin');
+            } else {
+                adminErrorMessage.classList.remove('hidden');
+                adminPasswordInput.value = '';
+            }
+        };
+
+        const fetchPendingOrders = async () => {
+            pendingOrdersContainer.innerHTML = `<p class="text-center text-gray-500 py-10">Memuat pesanan masuk...</p>`;
+            try {
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getPendingOrders`);
+                if (!response.ok) throw new Error('Gagal mengambil data');
+                const orders = await response.json();
+                renderPendingOrders(orders);
+            } catch (error) {
+                pendingOrdersContainer.innerHTML = `<p class="text-center text-red-400 py-10">Gagal memuat pesanan. Coba lagi.</p>`;
+                console.error(error);
+            }
+        };
+
+        const renderPendingOrders = (orders) => {
+            if (orders.length === 0) {
+                pendingOrdersContainer.innerHTML = `<p class="text-center text-gray-500 py-10">Tidak ada pesanan masuk.</p>`;
+                return;
+            }
+            pendingOrdersContainer.innerHTML = orders.map(order => {
+                const items = JSON.parse(order.items);
+                const itemsHtml = items.map(item => `<li>- ${item.name} (x${item.qty})</li>`).join('');
+                return `
+                    <div id="order-${order.orderId}" class="bg-gray-800 p-4 rounded-lg">
+                        <div class="flex justify-between items-start">
+                             <div>
+                                <p class="font-bold text-lg">${order.customerName}</p>
+                                <p class="text-sm text-gray-400">${order.customerPhone}</p>
+                                <p class="text-sm text-cyan-400 capitalize mt-1">Jenis: ${order.orderType}</p>
+                             </div>
+                             <div class="text-right">
+                                <p class="font-bold text-lg text-emerald-400">${formatCurrency(order.totalAmount)}</p>
+                                <p class="text-sm text-gray-400 capitalize">${order.paymentMethod}</p>
+                             </div>
+                        </div>
+                         ${order.deliveryAddress ? `<p class="text-sm mt-2 bg-gray-700 p-2 rounded">Alamat: ${order.deliveryAddress}</p>` : ''}
+                        <div class="mt-2 text-sm text-gray-300">
+                             <p class="font-semibold mb-1">Detail item:</p>
+                             <ul class="list-disc list-inside">${itemsHtml}</ul>
+                        </div>
+                        <div class="flex gap-3 mt-4">
+                            <button data-id="${order.orderId}" class="confirm-order-btn flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors">Konfirmasi</button>
+                            <button data-id="${order.orderId}" class="reject-order-btn flex-1 bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">Tolak</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+        
+        const handleAdminAction = async (e) => {
+            const target = e.target;
+            if (!target.dataset.id) return;
+            
+            const orderId = target.dataset.id;
+            const action = target.classList.contains('confirm-order-btn') ? 'confirmOrder' : 'rejectOrder';
+            
+            target.disabled = true;
+            target.textContent = 'Memproses...';
+
+            try {
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=${action}&id=${orderId}`);
+                const result = await response.json();
+                if (result.result === 'success') {
+                    document.getElementById(`order-${orderId}`).style.opacity = '0';
+                    setTimeout(() => document.getElementById(`order-${orderId}`).remove(), 500);
+                } else {
+                    throw new Error(result.error || 'Aksi gagal');
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                target.disabled = false;
+                target.textContent = action === 'confirmOrder' ? 'Konfirmasi' : 'Tolak';
+            }
+        };
+
         // EVENT LISTENERS
         categoryBtns.forEach(btn => btn.addEventListener('click', handleCategoryClick));
         productGrid.addEventListener('click', handleProductGridClick);
@@ -589,8 +696,20 @@
         checkoutBtn.addEventListener('click', () => switchView('payment'));
         orderTypeBtns.forEach(btn => btn.addEventListener('click', handleOrderTypeClick));
         paymentMethodBtns.forEach(btn => btn.addEventListener('click', handlePaymentMethodClick));
-        confirmOrderBtn.addEventListener('click', handleConfirmOrder);
-        closeModalBtn.addEventListener('click', closeModal);
+        confirmOrderBtn.addEventListener('click', handleSendOrder);
+        closeModalBtn.addEventListener('click', closeSuccessModal);
+        
+        // Admin listeners
+        adminLoginBtn.addEventListener('click', openAdminLoginModal);
+        closeAdminLoginModalBtn.addEventListener('click', closeAdminLoginModal);
+        submitAdminLoginBtn.addEventListener('click', handleSubmitAdminLogin);
+        adminPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSubmitAdminLogin();
+        });
+        logoutAdminBtn.addEventListener('click', () => switchView('menu'));
+        refreshOrdersBtn.addEventListener('click', fetchPendingOrders);
+        pendingOrdersContainer.addEventListener('click', handleAdminAction);
+
 
         // INITIAL LOAD
         fetchProducts();
