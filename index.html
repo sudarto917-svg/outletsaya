@@ -151,6 +151,8 @@
                         <span>Total Tagihan:</span>
                         <span id="payment-total-amount" class="text-emerald-400">Rp 0</span>
                     </div>
+                    
+                    <!-- Customer Details -->
                     <div class="space-y-4">
                         <div>
                             <label for="customer-name" class="block text-sm font-medium text-gray-400 mb-1">Nama Pelanggan</label>
@@ -161,6 +163,31 @@
                             <input type="tel" id="customer-phone" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 081234567890">
                         </div>
                     </div>
+                    
+                    <!-- Order Type -->
+                    <h3 class="font-bold text-lg mt-6 mb-4">Jenis Pesanan</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <button data-type="dine-in" class="order-type-btn flex flex-col items-center justify-center p-3 bg-gray-700 rounded-lg border-2 border-transparent ring-2 ring-emerald-500">
+                            <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
+                            <span class="font-semibold text-sm">Makan di Tempat</span>
+                        </button>
+                        <button data-type="take-out" class="order-type-btn flex flex-col items-center justify-center p-3 bg-gray-700 rounded-lg border-2 border-transparent">
+                            <i data-lucide="shopping-bag" class="w-6 h-6 mb-1"></i>
+                            <span class="font-semibold text-sm">Bawa Pulang</span>
+                        </button>
+                        <button data-type="delivery" class="order-type-btn flex flex-col items-center justify-center p-3 bg-gray-700 rounded-lg border-2 border-transparent">
+                            <i data-lucide="truck" class="w-6 h-6 mb-1"></i>
+                            <span class="font-semibold text-sm">Pengiriman</span>
+                        </button>
+                    </div>
+
+                    <!-- Delivery Address -->
+                    <div id="delivery-address-container" class="mt-4 hidden">
+                        <label for="delivery-address" class="block text-sm font-medium text-gray-400 mb-1">Alamat Pengiriman</label>
+                        <textarea id="delivery-address" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Masukkan alamat lengkap..."></textarea>
+                    </div>
+                    
+                    <!-- Payment Method -->
                     <h3 class="font-bold text-lg mt-6 mb-4">Pilih Metode Pembayaran</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <button data-payment="cash" class="payment-method-btn flex flex-col items-center justify-center p-4 bg-gray-700 rounded-lg border-2 border-transparent ring-2 ring-emerald-500">
@@ -172,11 +199,13 @@
                             <span class="font-semibold">Bank Transfer</span>
                         </button>
                     </div>
+
                     <div id="transfer-info" class="mt-4 bg-gray-900 p-4 rounded-md hidden">
                         <p class="font-semibold text-center">Silakan transfer ke rekening berikut:</p>
                         <p class="text-center text-lg font-bold mt-2">BCA: 1234567890</p>
                         <p class="text-center">a.n. Outlet Kekinian</p>
                     </div>
+
                     <button id="confirm-order-btn" class="w-full mt-8 bg-emerald-500 text-white py-3 rounded-lg font-bold text-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 disabled:bg-gray-500 disabled:cursor-not-allowed">
                         <span id="confirm-btn-text">Konfirmasi Pesanan</span>
                         <div id="confirm-btn-loader" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin hidden"></div>
@@ -205,7 +234,7 @@
         // =================================================================================
         // KONFIGURASI PENTING (WAJIB DIISI)
         // =================================================================================
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyxZMqTjycu82XEsV629YH4yzAxCnaDocMzB7JKzq7Z6ce-NjCu88lmxk_wtkD0D1WCw/exec'; // <-- ISI DENGAN URL WEB APP ANDA
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOKJQd8a4GRS1neFxN1Cnx8Xyb3SsZqMDGfQf3EFATrRFOlAAc19GYC1laTz7rBLN0Uw/exec'; // <-- ISI DENGAN URL WEB APP ANDA
         const YOUR_WHATSAPP_NUMBER = '6285225466047'; // <-- GANTI DENGAN NOMOR WA ANDA
         // =================================================================================
 
@@ -214,6 +243,7 @@
             cart: [],
             currentView: 'menu',
             paymentMethod: 'cash',
+            orderType: 'dine-in',
         };
 
         // DOM Elements
@@ -239,6 +269,9 @@
         const paymentTotalAmountEl = document.getElementById('payment-total-amount');
         const checkoutBtn = document.getElementById('checkout-btn');
         const paymentMethodBtns = document.querySelectorAll('.payment-method-btn');
+        const orderTypeBtns = document.querySelectorAll('.order-type-btn');
+        const deliveryAddressContainer = document.getElementById('delivery-address-container');
+        const deliveryAddressInput = document.getElementById('delivery-address');
         const transferInfo = document.getElementById('transfer-info');
         const confirmOrderBtn = document.getElementById('confirm-order-btn');
         const customerNameInput = document.getElementById('customer-name');
@@ -408,6 +441,15 @@
             renderCart();
         };
         
+        const handleOrderTypeClick = (e) => {
+            const target = e.target.closest('.order-type-btn');
+            if (!target) return;
+            state.orderType = target.dataset.type;
+            orderTypeBtns.forEach(btn => btn.classList.remove('ring-2', 'ring-emerald-500'));
+            target.classList.add('ring-2', 'ring-emerald-500');
+            deliveryAddressContainer.classList.toggle('hidden', state.orderType !== 'delivery');
+        };
+
         const handlePaymentMethodClick = (e) => {
             const target = e.target.closest('.payment-method-btn');
             if (!target) return;
@@ -420,8 +462,13 @@
         const handleConfirmOrder = async () => {
             const customerName = customerNameInput.value.trim();
             const customerPhone = customerPhoneInput.value.trim();
+            const deliveryAddress = deliveryAddressInput.value.trim();
+
             if (state.cart.length === 0) return alert('Keranjang belanja kosong!');
             if (!customerName || !customerPhone) return alert('Nama dan Nomor WhatsApp pelanggan wajib diisi!');
+            if (state.orderType === 'delivery' && !deliveryAddress) {
+                return alert('Alamat pengiriman wajib diisi untuk pesanan delivery!');
+            }
             if (GOOGLE_APPS_SCRIPT_URL === '') return alert('Konfigurasi Error: URL Google Apps Script belum diisi.');
             
             const confirmBtnText = document.getElementById('confirm-btn-text');
@@ -433,24 +480,41 @@
             const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const orderData = {
                 timestamp: new Date().toISOString(),
-                customerName, customerPhone,
+                customerName, 
+                customerPhone,
                 paymentMethod: state.paymentMethod,
                 totalAmount: total,
                 items: JSON.stringify(state.cart.map(item => ({ name: item.name, qty: item.quantity, price: item.price }))),
+                orderType: state.orderType,
+                deliveryAddress: state.orderType === 'delivery' ? deliveryAddress : '',
             };
 
             try {
+                // Since 'no-cors' mode is used, we can't actually read the response.
+                // We'll assume success if the fetch doesn't throw an error.
                 await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST', mode: 'no-cors', cache: 'no-cache',
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    cache: 'no-cache',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(orderData), redirect: 'follow',
+                    body: JSON.stringify(orderData),
+                    redirect: 'follow',
                 });
+                
+                let orderTypeText = '';
+                if(state.orderType === 'dine-in') orderTypeText = 'Makan di Tempat';
+                if(state.orderType === 'take-out') orderTypeText = 'Bawa Pulang';
+                if(state.orderType === 'delivery') orderTypeText = 'Pengiriman';
 
-                let message = `Halo *${customerName}*,\n\nTerima kasih atas pesanan Anda di *Outlet Kekinian*.\n\nBerikut rincian pesanan Anda:\n\n`;
+                let message = `Halo *${customerName}*,\n\nTerima kasih atas pesanan Anda di *Outlet Bahagia*.\n\nBerikut rincian pesanan Anda:\n\n`;
                 state.cart.forEach(item => {
                     message += `- ${item.name} (x${item.quantity}) : ${formatCurrency(item.price * item.quantity)}\n`;
                 });
                 message += `\n*Total : ${formatCurrency(total)}*\n`;
+                message += `Jenis Pesanan: *${orderTypeText}*\n`;
+                if (state.orderType === 'delivery') {
+                    message += `Alamat Pengiriman: *${deliveryAddress}*\n`;
+                }
                 message += `Metode Pembayaran: *${state.paymentMethod.charAt(0).toUpperCase() + state.paymentMethod.slice(1)}*\n\n`;
                 if (state.paymentMethod === 'transfer') {
                     message += `Mohon segera lakukan pembayaran ke rekening:\n*BCA: 1234567890 a.n. Outlet Kekinian*\n\n`;
@@ -463,7 +527,7 @@
                 resetApp();
             } catch (error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan saat mengirim data.');
+                alert('Terjadi kesalahan saat mengirim data. Pastikan koneksi internet Anda stabil.');
             } finally {
                 confirmOrderBtn.disabled = false;
                 confirmBtnText.classList.remove('hidden');
@@ -474,8 +538,19 @@
         const resetApp = () => {
             state.cart = [];
             state.paymentMethod = 'cash';
+            state.orderType = 'dine-in';
             customerNameInput.value = '';
             customerPhoneInput.value = '';
+            deliveryAddressInput.value = '';
+            
+            // Reset visual state
+            paymentMethodBtns.forEach(btn => btn.classList.remove('ring-2', 'ring-emerald-500'));
+            document.querySelector('.payment-method-btn[data-payment="cash"]').classList.add('ring-2', 'ring-emerald-500');
+            orderTypeBtns.forEach(btn => btn.classList.remove('ring-2', 'ring-emerald-500'));
+            document.querySelector('.order-type-btn[data-type="dine-in"]').classList.add('ring-2', 'ring-emerald-500');
+            deliveryAddressContainer.classList.add('hidden');
+            transferInfo.classList.add('hidden');
+
             renderCart();
             switchView('menu');
         };
@@ -512,6 +587,7 @@
         backToMenuBtn.addEventListener('click', () => switchView('menu'));
         backToCartBtn.addEventListener('click', () => switchView('cart'));
         checkoutBtn.addEventListener('click', () => switchView('payment'));
+        orderTypeBtns.forEach(btn => btn.addEventListener('click', handleOrderTypeClick));
         paymentMethodBtns.forEach(btn => btn.addEventListener('click', handlePaymentMethodClick));
         confirmOrderBtn.addEventListener('click', handleConfirmOrder);
         closeModalBtn.addEventListener('click', closeModal);
@@ -523,5 +599,4 @@
     </script>
 </body>
 </html>
-
 
