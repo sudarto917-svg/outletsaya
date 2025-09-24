@@ -783,7 +783,11 @@
                 
                 const formattedPhone = formatWhatsappNumber(order.customerPhone);
                 return `
-                    <div id="order-${order.orderId}" class="bg-gray-800 p-4 rounded-lg" data-customer-name="${order.customerName || ''}" data-customer-phone="${order.customerPhone || ''}">
+                    <div id="order-${order.orderId}" class="bg-gray-800 p-4 rounded-lg" 
+                         data-customer-name="${order.customerName || ''}" 
+                         data-customer-phone="${order.customerPhone || ''}"
+                         data-order-type="${order.orderType || ''}"
+                         data-total-amount="${order.totalAmount || 0}">
                         <div class="flex justify-between items-start">
                              <div>
                                 <p class="text-sm text-gray-400">Pemesan</p>
@@ -877,10 +881,17 @@
                         // Kirim notifikasi WhatsApp ke pelanggan
                         const customerName = card.dataset.customerName;
                         const customerPhone = card.dataset.customerPhone;
+                        const orderType = card.dataset.orderType;
+                        const totalAmount = parseFloat(card.dataset.totalAmount);
                         const formattedPhone = formatWhatsappNumber(customerPhone);
                         
                         if (formattedPhone) {
-                            const message = `Halo ${customerName}, pesanan Anda di Outlet Bahagia telah kami konfirmasi dan sedang kami siapkan. Terima kasih! 🙏`;
+                            let message = '';
+                            if (orderType === 'delivery') {
+                                message = `Halo ${customerName}, pesanan Anda di Outlet Bahagia telah kami terima.\n\nTotal pesanan: *${formatCurrency(totalAmount)}*.\n\nMohon untuk segera mengirimkan bukti transfer agar pesanan Anda dapat kami proses. Terima kasih! 🙏`;
+                            } else {
+                                message = `Halo ${customerName}, pesanan Anda di Outlet Bahagia telah kami konfirmasi dan sedang kami siapkan. Terima kasih! 🙏`;
+                            }
                             const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
                             window.open(whatsappUrl, '_blank');
                         }
