@@ -219,21 +219,63 @@
 
             <!-- ===== ADMIN VIEW ===== -->
             <div id="admin-view" class="hidden">
-                <div class="flex items-center justify-between gap-4 mb-6">
-                     <h2 class="text-2xl font-bold">Admin: Pesanan Masuk</h2>
+                 <div class="flex items-center justify-between gap-4 mb-6">
+                     <h2 class="text-2xl font-bold">Dasbor Admin</h2>
                      <button id="logout-admin-btn" class="flex items-center gap-2 bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span>Keluar</span>
                     </button>
                 </div>
-                <div class="flex justify-end mb-4">
-                    <button id="refresh-orders-btn" class="flex items-center gap-2 bg-cyan-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-cyan-700">
+
+                <!-- Sales Summary Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4">Rekapan Penjualan</h3>
+                    <div id="sales-summary-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <!-- Card 1: Total Pendapatan -->
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <p class="text-sm text-gray-400">Total Pendapatan</p>
+                            <p id="admin-total-revenue" class="text-2xl font-bold text-emerald-400">Rp 0</p>
+                        </div>
+                        <!-- Card 2: Total Pesanan -->
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <p class="text-sm text-gray-400">Total Pesanan</p>
+                            <p id="admin-total-orders" class="text-2xl font-bold">0</p>
+                        </div>
+                        <!-- Card 3: Rata-rata / Pesanan -->
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <p class="text-sm text-gray-400">Rata-rata/Pesanan</p>
+                            <p id="admin-aov" class="text-2xl font-bold">Rp 0</p>
+                        </div>
+                        <!-- Card 4: Jenis Pesanan -->
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <p class="text-sm text-gray-400">Jenis Pesanan</p>
+                            <div class="text-sm mt-1">
+                                <p>Dine-in: <span id="admin-dine-in" class="font-bold">0</span></p>
+                                <p>Take-out: <span id="admin-take-out" class="font-bold">0</span></p>
+                                <p>Delivery: <span id="admin-delivery" class="font-bold">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+                     <p id="sales-summary-loader" class="text-center text-gray-500 py-4 hidden">Memuat rekapan...</p>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 mb-4">
+                     <h3 class="text-xl font-semibold">Pesanan Masuk</h3>
+                     <button id="refresh-orders-btn" class="flex items-center gap-2 bg-cyan-600 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-cyan-700">
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                         <span>Muat Ulang</span>
                     </button>
                 </div>
                 <div id="pending-orders-container" class="space-y-4">
                     <p class="text-center text-gray-500 py-10">Memuat pesanan masuk...</p>
+                </div>
+                
+                <!-- Confirmed Orders History -->
+                <div class="mt-12">
+                    <h3 class="text-xl font-semibold mb-4">Riwayat Pesanan Diterima</h3>
+                    <div id="confirmed-orders-container" class="space-y-4">
+                         <p class="text-center text-gray-500 py-10">Memuat riwayat pesanan...</p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -280,7 +322,7 @@
         // =================================================================================
         // KONFIGURASI PENTING (WAJIB DIISI)
         // =================================================================================
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcTvsDIxhhK3NttDeYm5kUHZUG2_SrShmlWS4wnu7JPVcIWueMeiMsDwEkH2WTJuSjSg/exec'; // <-- ISI DENGAN URL WEB APP ANDA
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIC5iHvtUj7pJa8Ffp96l-L1uJAMIODFpfBgck3JCGO7jjH819843J6TTSVzb6Gid94Q/exec'; // <-- ISI DENGAN URL WEB APP ANDA
         const YOUR_WHATSAPP_NUMBER = '6285225466047'; // <-- GANTI DENGAN NOMOR WA ANDA
         const ADMIN_PASSWORD = 'Masdar45'; // <-- GANTI DENGAN PASSWORD ADMIN ANDA
         // =================================================================================
@@ -333,9 +375,13 @@
         const successModal = document.getElementById('success-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
 
+        // Admin View Elements
         const pendingOrdersContainer = document.getElementById('pending-orders-container');
+        const confirmedOrdersContainer = document.getElementById('confirmed-orders-container');
         const refreshOrdersBtn = document.getElementById('refresh-orders-btn');
         const logoutAdminBtn = document.getElementById('logout-admin-btn');
+        const salesSummaryContainer = document.getElementById('sales-summary-container');
+        const salesSummaryLoader = document.getElementById('sales-summary-loader');
         
         // Admin Login Modal Elements
         const adminLoginModal = document.getElementById('admin-login-modal');
@@ -357,31 +403,26 @@
         const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
         const formatWhatsappNumber = (phone) => {
-            if (!phone || typeof phone !== 'string') {
-                return '';
-            }
-            // 1. Hapus semua karakter kecuali angka.
+            if (!phone || typeof phone !== 'string') return '';
             let digitsOnly = phone.replace(/\D/g, '');
-
-            // 2. Jika nomor dimulai dengan '62', anggap sudah benar.
-            if (digitsOnly.startsWith('62')) {
-                return digitsOnly;
-            }
-
-            // 3. Jika nomor dimulai dengan '0', ganti '0' dengan '62'.
-            if (digitsOnly.startsWith('0')) {
-                return '62' + digitsOnly.substring(1);
-            }
-            
-            // 4. Jika nomor tidak dimulai dengan '0' atau '62' (misal, langsung '8xx'),
-            //    dan cukup panjang, tambahkan '62' di depan.
-            if (digitsOnly.length > 8) { 
-                return '62' + digitsOnly;
-            }
-
-            // 5. Jika tidak ada yang cocok, kemungkinan nomor tidak valid.
-            //    Kembalikan apa adanya untuk menghindari error.
+            if (digitsOnly.startsWith('62')) return digitsOnly;
+            if (digitsOnly.startsWith('0')) return '62' + digitsOnly.substring(1);
+            if (digitsOnly.length > 8) return '62' + digitsOnly;
             return digitsOnly;
+        };
+
+        const robustJsonFetch = async (url) => {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+            }
+            const text = await response.text();
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error("Gagal mem-parsing JSON dari server:", text);
+                throw new Error("Menerima data tidak valid dari server.");
+            }
         };
 
         const renderProducts = (category = 'all') => {
@@ -467,7 +508,11 @@
             [menuView, cartView, paymentView, adminView].forEach(v => v.classList.add('hidden'));
             document.getElementById(`${view}-view`).classList.remove('hidden');
             if (view === 'cart') renderCart();
-            if (view === 'admin') fetchPendingOrders();
+            if (view === 'admin') {
+                fetchPendingOrders();
+                fetchSalesReport();
+                fetchConfirmedOrders();
+            }
         };
 
         const updateDeliveryNoticeVisibility = () => {
@@ -640,9 +685,8 @@
                 return;
             }
             try {
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                state.products = await response.json();
+                const products = await robustJsonFetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getProducts`);
+                state.products = products;
                 renderProducts();
             } catch (error) {
                 console.error("Could not fetch products:", error);
@@ -680,14 +724,47 @@
         const fetchPendingOrders = async () => {
             pendingOrdersContainer.innerHTML = `<p class="text-center text-gray-500 py-10">Memuat pesanan masuk...</p>`;
             try {
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getPendingOrders`);
-                if (!response.ok) throw new Error('Gagal mengambil data');
-                const orders = await response.json();
+                const orders = await robustJsonFetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getPendingOrders`);
                 renderPendingOrders(orders);
             } catch (error) {
                 pendingOrdersContainer.innerHTML = `<p class="text-center text-red-400 py-10">Gagal memuat pesanan. Coba lagi.</p>`;
                 console.error(error);
             }
+        };
+        
+        const fetchConfirmedOrders = async () => {
+            confirmedOrdersContainer.innerHTML = `<p class="text-center text-gray-500 py-10">Memuat riwayat pesanan...</p>`;
+            try {
+                const orders = await robustJsonFetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getConfirmedOrders`);
+                renderConfirmedOrders(orders);
+            } catch (error) {
+                confirmedOrdersContainer.innerHTML = `<p class="text-center text-red-400 py-10">Gagal memuat riwayat. Coba lagi.</p>`;
+                console.error(error);
+            }
+        };
+        
+        const fetchSalesReport = async () => {
+            salesSummaryLoader.classList.remove('hidden');
+            salesSummaryContainer.classList.add('hidden');
+            try {
+                const report = await robustJsonFetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getSalesReport`);
+                renderSalesReport(report);
+            } catch (error) {
+                salesSummaryContainer.innerHTML = `<p class="col-span-full text-center text-red-400 py-4">Gagal memuat rekap penjualan.</p>`;
+                console.error(error);
+            } finally {
+                salesSummaryLoader.classList.add('hidden');
+                salesSummaryContainer.classList.remove('hidden');
+            }
+        };
+        
+        const renderSalesReport = (report) => {
+            document.getElementById('admin-total-revenue').textContent = formatCurrency(report.totalRevenue);
+            document.getElementById('admin-total-orders').textContent = report.totalOrders;
+            document.getElementById('admin-aov').textContent = formatCurrency(report.averageOrderValue);
+            document.getElementById('admin-dine-in').textContent = report.orderTypes['dine-in'] || 0;
+            document.getElementById('admin-take-out').textContent = report.orderTypes['take-out'] || 0;
+            document.getElementById('admin-delivery').textContent = report.orderTypes['delivery'] || 0;
         };
 
         const renderPendingOrders = (orders) => {
@@ -696,21 +773,29 @@
                 return;
             }
             pendingOrdersContainer.innerHTML = orders.map(order => {
-                const items = JSON.parse(order.items);
-                const itemsHtml = items.map(item => `<li>- ${item.name} (x${item.qty})</li>`).join('');
+                let itemsHtml = '<li>Data item tidak valid</li>';
+                try {
+                    const items = JSON.parse(order.items);
+                    if (Array.isArray(items)) {
+                         itemsHtml = items.map(item => `<li>- ${item.name || '?'} (x${item.qty || 0})</li>`).join('');
+                    }
+                } catch(e) { console.error("Gagal parse item di pesanan masuk", order.items, e); }
+                
                 const formattedPhone = formatWhatsappNumber(order.customerPhone);
                 return `
-                    <div id="order-${order.orderId}" class="bg-gray-800 p-4 rounded-lg">
+                    <div id="order-${order.orderId}" class="bg-gray-800 p-4 rounded-lg" data-customer-name="${order.customerName || ''}" data-customer-phone="${order.customerPhone || ''}">
                         <div class="flex justify-between items-start">
                              <div>
-                                <p class="font-bold text-lg">${order.customerName}</p>
-                                <div class="flex items-center gap-2 text-sm text-gray-400">
-                                    <span>${order.customerPhone}</span>
+                                <p class="text-sm text-gray-400">Pemesan</p>
+                                <p class="font-bold text-lg">${order.customerName || 'Nama tidak ada'}</p>
+                                <div class="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                                    <span>${order.customerPhone || '-'}</span>
+                                    ${formattedPhone ? `
                                     <a href="https://wa.me/${formattedPhone}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 p-1 -m-1 rounded-full hover:bg-gray-700 transition-colors" title="Hubungi via WhatsApp">
                                         <i data-lucide="message-square" class="w-4 h-4"></i>
-                                    </a>
+                                    </a>` : ''}
                                 </div>
-                                <p class="text-sm text-cyan-400 capitalize mt-1">Jenis: ${order.orderType}</p>
+                                <p class="text-sm text-cyan-400 capitalize mt-2">Jenis: ${order.orderType}</p>
                              </div>
                              <div class="text-right">
                                 <p class="font-bold text-lg text-emerald-400">${formatCurrency(order.totalAmount)}</p>
@@ -731,6 +816,46 @@
             }).join('');
             lucide.createIcons();
         };
+
+        const renderConfirmedOrders = (orders) => {
+            if (orders.length === 0) {
+                confirmedOrdersContainer.innerHTML = `<p class="text-center text-gray-500 py-10">Belum ada pesanan yang dikonfirmasi.</p>`;
+                return;
+            }
+            confirmedOrdersContainer.innerHTML = orders.map(order => {
+                let itemsHtml = '<li>Data item tidak valid</li>';
+                try {
+                    const items = JSON.parse(order.items);
+                    if (Array.isArray(items)) {
+                        itemsHtml = items.map(item => `<li>- ${item.name || '?'} (x${item.qty || 0})</li>`).join('');
+                    }
+                } catch (e) {
+                    console.error("Gagal memproses item pada riwayat pesanan:", order.items, e);
+                }
+
+                const orderDate = new Date(order.timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short'});
+                return `
+                    <div class="bg-gray-800 p-4 rounded-lg opacity-70">
+                        <div class="flex justify-between items-start">
+                             <div>
+                                <p class="text-sm text-gray-400">Pemesan</p>
+                                <p class="font-bold text-lg">${order.customerName || 'Nama tidak ada'}</p>
+                                <p class="text-sm text-gray-400 mt-1">${order.customerPhone || '-'}</p>
+                                <p class="text-sm text-cyan-400 capitalize mt-2">Jenis: ${order.orderType}</p>
+                             </div>
+                             <div class="text-right">
+                                <p class="font-bold text-lg text-emerald-400">${formatCurrency(order.totalAmount)}</p>
+                                <p class="text-xs text-gray-500">${orderDate}</p>
+                             </div>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-300">
+                             <p class="font-semibold mb-1">Detail item:</p>
+                             <ul class="list-disc list-inside">${itemsHtml}</ul>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
         
         const handleAdminAction = async (e) => {
             const target = e.target;
@@ -739,21 +864,39 @@
             const orderId = target.dataset.id;
             const action = target.classList.contains('confirm-order-btn') ? 'confirmOrder' : 'rejectOrder';
             
-            target.disabled = true;
+            const card = document.getElementById(`order-${orderId}`);
+            const buttons = card.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
             target.textContent = 'Memproses...';
 
             try {
-                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=${action}&id=${orderId}`);
-                const result = await response.json();
+                const result = await robustJsonFetch(`${GOOGLE_APPS_SCRIPT_URL}?action=${action}&id=${orderId}`);
+
                 if (result.result === 'success') {
-                    document.getElementById(`order-${orderId}`).style.opacity = '0';
-                    setTimeout(() => document.getElementById(`order-${orderId}`).remove(), 500);
+                    if (action === 'confirmOrder') {
+                        // Kirim notifikasi WhatsApp ke pelanggan
+                        const customerName = card.dataset.customerName;
+                        const customerPhone = card.dataset.customerPhone;
+                        const formattedPhone = formatWhatsappNumber(customerPhone);
+                        
+                        if (formattedPhone) {
+                            const message = `Halo ${customerName}, pesanan Anda di Outlet Bahagia telah kami konfirmasi dan sedang kami siapkan. Terima kasih! 🙏`;
+                            const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+                            window.open(whatsappUrl, '_blank');
+                        }
+                    }
+                    
+                    // Muat ulang semua data di halaman admin
+                    fetchPendingOrders();
+                    fetchConfirmedOrders();
+                    fetchSalesReport();
+
                 } else {
                     throw new Error(result.error || 'Aksi gagal');
                 }
             } catch (error) {
                 alert(`Error: ${error.message}`);
-                target.disabled = false;
+                buttons.forEach(btn => btn.disabled = false);
                 target.textContent = action === 'confirmOrder' ? 'Konfirmasi' : 'Tolak';
             }
         };
@@ -779,7 +922,11 @@
             if (e.key === 'Enter') handleSubmitAdminLogin();
         });
         logoutAdminBtn.addEventListener('click', () => switchView('menu'));
-        refreshOrdersBtn.addEventListener('click', fetchPendingOrders);
+        refreshOrdersBtn.addEventListener('click', () => {
+            fetchPendingOrders();
+            fetchSalesReport();
+            fetchConfirmedOrders();
+        });
         pendingOrdersContainer.addEventListener('click', handleAdminAction);
 
 
