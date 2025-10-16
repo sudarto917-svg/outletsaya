@@ -205,10 +205,17 @@
                             <span class="font-semibold">Bank Transfer</span>
                         </button>
                     </div>
-                    <div id="transfer-info" class="mt-4 bg-gray-900 p-4 rounded-md hidden">
-                        <p class="font-semibold text-center">Silakan transfer ke rekening berikut:</p>
-                        <p class="text-center text-lg font-bold mt-2">BCA: 1234567890</p>
-                        <p class="text-center">a.n. Outlet Kekinian</p>
+                   <div id="transfer-info" class="mt-4 bg-gray-900 p-4 rounded-md hidden text-center">
+                       <p class="font-semibold text-white text-lg mb-2">Silakan lakukan pembayaran dengan memindai kode QRIS berikut:</p>
+
+                        <img src="https://i.imgur.com/cv5MwBp.png" 
+                             alt="Kode QRIS Pembayaran" 
+                             class="mx-auto rounded-lg w-full max-w-xs h-auto border-4 border-gray-600 my-4">
+
+                        <p class="text-gray-300">Atas nama: <span class="font-semibold">Outlet Kekinian</span></p>
+
+                        <button id="close-qris-btn" 
+                                class="w-full mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg">
                     </div>
                     <button id="confirm-order-btn" class="w-full mt-8 bg-emerald-500 text-white py-3 rounded-lg font-bold text-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 disabled:bg-gray-500 disabled:cursor-not-allowed">
                         <span id="confirm-btn-text">Kirim Pesanan</span>
@@ -948,6 +955,7 @@
     </script>
 </body>
 </html>
+
 
 
 
