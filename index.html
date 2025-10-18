@@ -65,7 +65,7 @@
             <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-2">
                 Selamat Datang
             </h1>
-            <p class="text-lg text-gray-400 mb-8">Outlet Bahagia</p>
+            <p class="text-lg text-gray-400 mb-8">DAPUR OMAH</p>
             <button id="enter-app-btn" class="bg-emerald-500 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-emerald-600 transition-all transform hover:scale-105 shadow-lg shadow-emerald-500/20">
                 Mulai Pesan
             </button>
@@ -83,7 +83,7 @@
                     <i data-lucide="shield" class="w-6 h-6 text-gray-400"></i>
                  </button>
                  <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                    Outlet Bahagia
+                    DAPUR OMAH
                 </h1>
             </div>
             <button id="cart-button" class="relative rounded-full p-2 hover:bg-gray-700 transition-colors">
@@ -895,9 +895,9 @@
                         if (formattedPhone) {
                             let message = '';
                             if (orderType === 'delivery') {
-                                message = `Halo ${customerName}, pesanan Anda di Outlet Bahagia telah kami terima.\n\nTotal pesanan: *${formatCurrency(totalAmount)}*.\n\nMohon untuk segera mengirimkan bukti transfer agar pesanan Anda dapat kami proses. Terima kasih! 🙏`;
+                                message = `Halo ${customerName}, pesanan Anda di DAPUR OMAH telah kami terima.\n\nTotal pesanan: *${formatCurrency(totalAmount)}*.\n\nMohon untuk segera mengirimkan bukti transfer agar pesanan Anda dapat kami proses. Terima kasih! 🙏`;
                             } else {
-                                message = `Halo ${customerName}, pesanan Anda di Outlet Bahagia telah kami konfirmasi dan sedang kami siapkan. Terima kasih! 🙏`;
+                                message = `Halo ${customerName}, pesanan Anda di DAPUR OMAH telah kami konfirmasi dan sedang kami siapkan. Terima kasih! 🙏`;
                             }
                             const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
                             window.open(whatsappUrl, '_blank');
@@ -955,6 +955,7 @@
     </script>
 </body>
 </html>
+
 
 
 
